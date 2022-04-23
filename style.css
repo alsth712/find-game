@@ -1,0 +1,128 @@
+@import url("https://fonts.googleapis.com/css2?family=Play:wght@700&display=swap");
+
+* {
+  font-family: "Play", sans-serif;
+}
+
+button {
+  border: none;
+  outline: none;
+  cursor: pointer;
+}
+
+body {
+  text-align: center;
+  background-color: black;
+}
+
+.game {
+  display: flex;
+  flex-direction: column; /* pop-up까지 침범하는 것을 막아줌 */
+  width: 800px;
+  height: 500px;
+  margin: auto;
+  background: url(img/background.png) center/cover;
+  border-radius: 20px;
+}
+
+.game__header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 20px;
+}
+
+.game__button {
+  width: 60px;
+  height: 60px;
+  background-color: wheat;
+  border: 4px solid black;
+  border-radius: 10px;
+  font-size: 1.7rem;
+  transition: transform 300ms ease-in;
+}
+
+.game__button:hover {
+  color: #fa742b;
+  transform: scale(1.1);
+}
+
+.game__timer {
+  visibility: hidden; /* 초기화면에 안 보이게 */
+  width: 100px;
+  background-color: white;
+  text-align: center;
+  border: 5px solid black;
+  border-radius: 10px;
+  font-size: 1.8rem;
+  margin-top: 8px;
+  user-select: none;
+  cursor: auto;
+}
+
+.game__score {
+  visibility: hidden; /* 초기화면에 안 보이게 */
+  text-align: center;
+  width: 50px;
+  height: 50px;
+  margin-top: 8px;
+  font-size: 2.3rem;
+  border: 3px solid black;
+  border-radius: 50%;
+  background-color: darksalmon;
+  color: white;
+  user-select: none;
+  cursor: auto;
+}
+
+.game__field {
+  position: relative; /* item들이 absolute이므로, relative한 부모를 기준으로 위치가 설정되므로 relative 지정  */
+  margin-top: 40px;
+  width: 100%;
+  height: 100%;
+}
+
+.pop-up {
+  display: block;
+  width: 400px;
+  height: 140px;
+  padding: 20px;
+  margin: auto;
+  text-align: center;
+  transform: translateY(-150%);
+  background-color: black;
+  color: white;
+  border-radius: 30px;
+
+  background-color: rgba(0, 0, 128, 0.1);
+  backdrop-filter: blur(10px);
+  box-shadow: 2px 7px 15px 8px rgba(0, 0, 0, 0.3);
+}
+
+.pop-up__hide {
+  display: none;
+}
+
+.pop-up__refresh {
+  width: 60px;
+  height: 60px;
+  font-size: 1.7rem;
+  background-color: wheat;
+  border: 2px solid black;
+  border-radius: 50%;
+}
+
+.pop-up__message {
+  display: block;
+  font-size: 3rem;
+}
+
+.carrrot,
+.bug {
+  transition: transform 100ms ease-in;
+}
+
+.carrot:hover,
+.bug:hover {
+  transform: scale(1.1);
+}
