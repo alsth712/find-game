@@ -11,16 +11,25 @@ const gameBtn = document.querySelector(".game__button");
 const gameTimer = document.querySelector(".game__timer");
 const gameScore = document.querySelector(".game__score");
 
+const popUp = document.querySelector(".pop-up");
+const popUpText = document.querySelector(".pop-up__message");
+const popUpRefreshBtn = document.querySelector(".pop-up__refresh");
+
 let startFlag = false;
 let score = 0;
 let timer = undefined;
 
+field.addEventListener("click", onFieldClick);
 gameBtn.addEventListener("click", () => {
   if (startFlag) {
     stopGame();
   } else {
     startGame();
   }
+});
+popUpRefreshBtn.addEventListener("click", () => {
+  startGame();
+  hidePopUp();
 });
 
 // == start Game
@@ -37,6 +46,15 @@ function stopGame() {
   startFlag = false;
   stopGameTimer(); // game timer 종료
   hideGameButton();
+  showPopUpWithText("🥕 REPLAY? 🥕");
+}
+
+// == finish game
+function finishGame(win) {
+  startFlag = false;
+  hideGameButton();
+  stopGameTimer(); // game timer 종료
+  showPopUpWithText(win ? "✨ YOU WON ✨" : "😝 YOU LOST 😝");
 }
 
 function showStopButton() {
@@ -62,6 +80,7 @@ function startGameTimer() {
     if (remainingTimeSec <= 0) {
       // 남은 시간이 0초 이하라면 타이머 초기화 & game 종료
       clearInterval(timer);
+      finishGame(CARROT_COUNT === score);
       return;
     }
     updateTimerText(--remainingTimeSec); // 남은 시간이 있다면, 남은 시간 -
@@ -76,6 +95,15 @@ function updateTimerText(time) {
   const minutes = Math.floor(time / 60); // minutes 소수점 내림 값
   const seconds = time % 60; // seconds / 60 의 나머지 값
   gameTimer.textContent = `${minutes}:${seconds}`;
+}
+
+function showPopUpWithText(text) {
+  popUpText.textContent = text;
+  popUp.classList.remove("pop-up__hide");
+}
+
+function hidePopUp() {
+  popUp.classList.add("pop-up__hide");
 }
 
 // == create Game
@@ -110,6 +138,30 @@ function addItem(className, count, imgPath) {
     item.style.top = `${y}px`;
     field.appendChild(item);
   }
+}
+
+// === find the items
+function onFieldClick(event) {
+  if (!startFlag) {
+    return;
+  }
+  const target = event.target;
+  if (target.matches(".carrot")) {
+    // 당근 찾음 !
+    target.remove();
+    score++;
+    updateScoreBoard();
+    if (score === CARROT_COUNT) {
+      finishGame(true); // game - win
+    }
+  } else if (target.matches(".bug")) {
+    // 벌레 찾음 !
+    finishGame(false); // game - lose
+  }
+}
+
+function updateScoreBoard() {
+  gameScore.textContent = CARROT_COUNT - score;
 }
 
 // 정해진 범위 내에서 숫자 랜덤으로 뽑아오기
