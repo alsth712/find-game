@@ -1,185 +1,140 @@
-"use strict";
+import Field from "./field.js";
+import * as sound from "./sound.js";
 
-import PopUp from "./popup.js";
+export default class Game {
+  constructor(gameDuration, carrotCount, bugCount) {
+    this.gameDuration = gameDuration;
+    this.carrotCount = carrotCount;
+    this.bugCount = bugCount;
 
-const CARROT_SIZE = 80; // field를 넘지 않게 생성하기 위해, 당근의 크기만큼 -
-const CARROT_COUNT = 5;
-const BUG_COUNT = 5;
-const GAME_DURATION_SEC = 5;
+    this.gameTimer = document.querySelector(".game__timer");
+    this.gameScore = document.querySelector(".game__score");
+    this.gameBtn = document.querySelector(".game__button");
+    this.gameBtn.addEventListener("click", () => {
+      if (this.startFlag) {
+        this.stop();
+      } else {
+        this.start();
+      }
+    });
 
-const field = document.querySelector(".game__field");
-const fieldRect = field.getBoundingClientRect(); // 필드의 위치를 알아오기
-const gameBtn = document.querySelector(".game__button");
-const gameTimer = document.querySelector(".game__timer");
-const gameScore = document.querySelector(".game__score");
+    this.gameField = new Field(carrotCount, bugCount);
+    this.gameField.setClickListener(this.onItemClick);
 
-const carrotSound = new Audio("./sound/carrot_pull.mp3");
-const alertSound = new Audio("./sound/alert.wav");
-const bgSound = new Audio("./sound/bg.mp3");
-const bugSound = new Audio("./sound/bug_pull.mp3");
-const winSound = new Audio("./sound/game_win.mp3");
-
-let startFlag = false;
-let score = 0;
-let timer = undefined;
-
-const gameFinishBanner = new PopUp();
-gameFinishBanner.setClickListener(() => {
-  startGame(); // startGame 이라는 콜백함수 등록 -> 멤버변수에 onClick 할당
-});
-
-field.addEventListener("click", onFieldClick);
-gameBtn.addEventListener("click", () => {
-  if (startFlag) {
-    stopGame();
-  } else {
-    startGame();
+    this.startFlag = false;
+    this.score = 0;
+    this.timer = undefined;
   }
-});
 
-// == start Game
-function startGame() {
-  startFlag = true;
-  createGame(); // game item 만들기
-  showStopButton(); // 정지버튼 보여주기
-  showTimerAndScore(); // timer & score 를 game start 하면 보여주기
-  startGameTimer(); // game timer 시작
-  playSound(bgSound);
-}
-
-// == stop Game
-function stopGame() {
-  startFlag = false;
-  stopGameTimer(); // game timer 종료
-  hideGameButton();
-  gameFinishBanner.showWithText("🥕 REPLAY? 🥕");
-  playSound(alertSound);
-  stopSound(bgSound);
-}
-
-// == finish game
-function finishGame(win) {
-  startFlag = false;
-  hideGameButton();
-  if (win) {
-    playSound(winSound);
-  } else {
-    playSound(bugSound);
+  setGameStopListener(onGameStop) {
+    this.onGameStop = onGameStop;
   }
-  stopGameTimer(); // game timer 종료
-  stopSound(bgSound);
-  gameFinishBanner.showWithText(win ? "✨ YOU WON ✨" : "😝 YOU LOST 😝");
-}
 
-function showStopButton() {
-  const icon = gameBtn.querySelector(".fas");
-  icon.classList.add("fa-stop");
-  icon.classList.remove("fa-play");
-  gameBtn.style.visibility = "visible";
-}
+  // == start Game
+  start() {
+    this.startFlag = true;
+    this.createGame(); // game item 만들기
+    this.showStopButton(); // 정지버튼 보여주기
+    this.showTimerAndScore(); // timer & score 를 game start 하면 보여주기
+    this.startGameTimer(); // game timer 시작
+    sound.playBackground();
+  }
 
-function hideGameButton() {
-  gameBtn.style.visibility = "hidden";
-}
+  // == stop Game
+  stop() {
+    this.startFlag = false;
+    this.stopGameTimer(); // game timer 종료
+    this.hideGameButton();
+    sound.playAlert();
+    sound.stopBackground();
+    this.onGameStop && this.onGameStop("cancel");
+  }
 
-function showTimerAndScore() {
-  gameTimer.style.visibility = "visible";
-  gameScore.style.visibility = "visible";
-}
+  // == finish game
+  finish(win) {
+    this.startFlag = false;
+    this.hideGameButton();
+    if (win) {
+      sound.playWin();
+    } else {
+      sound.playBug();
+    }
+    this.stopGameTimer(); // game timer 종료
+    sound.stopBackground();
+    this.onGameStop && this.onGameStop(win ? "win" : "lose");
+  }
 
-function startGameTimer() {
-  let remainingTimeSec = GAME_DURATION_SEC;
-  updateTimerText(remainingTimeSec);
-  timer = setInterval(() => {
-    if (remainingTimeSec <= 0) {
-      // 남은 시간이 0초 이하라면 타이머 초기화 & game 종료
-      clearInterval(timer);
-      finishGame(CARROT_COUNT === score);
+  // === find the items
+  onItemClick = (item) => {
+    if (!this.startFlag) {
       return;
     }
-    updateTimerText(--remainingTimeSec); // 남은 시간이 있다면, 남은 시간 -
-  }, 1000);
-}
-
-function stopGameTimer() {
-  clearInterval(timer);
-}
-
-function updateTimerText(time) {
-  const minutes = Math.floor(time / 60); // minutes 소수점 내림 값
-  const seconds = time % 60; // seconds / 60 의 나머지 값
-  gameTimer.textContent = `${minutes}:${seconds}`;
-}
-
-// == create Game
-function createGame() {
-  // score 초기화
-  score = 0;
-  // 버튼 클릭 시, 게임 필드 reset
-  field.innerHTML = "";
-
-  // game score는 당근의 수
-  gameScore.innerText = CARROT_COUNT;
-
-  // 벌레와 당근을 생성한 뒤, field에 추가
-  addItem(`carrot`, CARROT_COUNT, `img/carrot.png`);
-  addItem(`bug`, BUG_COUNT, `img/bug.png`);
-}
-
-function addItem(className, count, imgPath) {
-  // 0 ~ fieldRect의 width, height 범위 내에서 랜덤 숫자 생성
-  const x1 = 0;
-  const y1 = 0;
-  const x2 = fieldRect.width - CARROT_SIZE;
-  const y2 = fieldRect.height - CARROT_SIZE;
-  for (let i = 0; i < count; i++) {
-    const item = document.createElement("img");
-    item.setAttribute("class", className);
-    item.setAttribute("src", imgPath);
-    item.style.position = "absolute";
-    const x = randomNumber(x1, x2);
-    const y = randomNumber(y1, y2);
-    item.style.left = `${x}px`;
-    item.style.top = `${y}px`;
-    field.appendChild(item);
-  }
-}
-
-// === find the items
-function onFieldClick(event) {
-  if (!startFlag) {
-    return;
-  }
-  const target = event.target;
-  if (target.matches(".carrot")) {
-    // 당근 찾음 !
-    target.remove();
-    score++;
-    playSound(carrotSound);
-    updateScoreBoard();
-    if (score === CARROT_COUNT) {
-      finishGame(true); // game - win
+    if (item === "carrot") {
+      // item = 당근
+      this.score++;
+      this.updateScoreBoard();
+      if (this.score === this.carrotCount) {
+        this.finish(true); // game - win
+      }
+    } else if (item === "bug") {
+      // item = 벌레
+      this.finish(false); // game - lose
     }
-  } else if (target.matches(".bug")) {
-    // 벌레 찾음 !
-    finishGame(false); // game - lose
+  };
+
+  showStopButton() {
+    const icon = this.gameBtn.querySelector(".fas");
+    icon.classList.add("fa-stop");
+    icon.classList.remove("fa-play");
+    this.gameBtn.style.visibility = "visible";
   }
-}
 
-function playSound(sound) {
-  sound.currentTime = 0; // 처음부터 재생
-  sound.play();
-}
+  hideGameButton() {
+    this.gameBtn.style.visibility = "hidden";
+  }
 
-function stopSound(sound) {
-  sound.pause();
-}
+  showTimerAndScore() {
+    this.gameTimer.style.visibility = "visible";
+    this.gameScore.style.visibility = "visible";
+  }
 
-function updateScoreBoard() {
-  gameScore.textContent = CARROT_COUNT - score;
-}
+  startGameTimer() {
+    let remainingTimeSec = this.gameDuration;
+    this.updateTimerText(remainingTimeSec);
+    this.timer = setInterval(() => {
+      if (remainingTimeSec <= 0) {
+        // 남은 시간이 0초 이하라면 타이머 초기화 & game 종료
+        clearInterval(this.timer);
+        this.finish(this.carrotCount === this.score);
+        return;
+      }
+      this.updateTimerText(--remainingTimeSec); // 남은 시간이 있다면, 남은 시간 -
+    }, 1000);
+  }
 
-// 정해진 범위 내에서 숫자 랜덤으로 뽑아오기
-function randomNumber(min, max) {
-  return Math.random() * (max - min) + min;
+  stopGameTimer() {
+    clearInterval(this.timer);
+  }
+
+  updateTimerText(time) {
+    const minutes = Math.floor(time / 60); // minutes 소수점 내림 값
+    const seconds = time % 60; // seconds / 60 의 나머지 값
+    this.gameTimer.textContent = `${minutes}:${seconds}`;
+  }
+
+  // == create Game
+  createGame() {
+    // score 초기화
+    this.score = 0;
+
+    // game score는 당근의 수
+    this.gameScore.innerText = this.carrotCount;
+
+    // gameField 에서 create
+    this.gameField.create();
+  }
+
+  updateScoreBoard() {
+    this.gameScore.textContent = this.carrotCount - this.score;
+  }
 }
