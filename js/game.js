@@ -1,5 +1,7 @@
 "use strict";
 
+import PopUp from "./popup.js";
+
 const CARROT_SIZE = 80; // field를 넘지 않게 생성하기 위해, 당근의 크기만큼 -
 const CARROT_COUNT = 5;
 const BUG_COUNT = 5;
@@ -11,10 +13,6 @@ const gameBtn = document.querySelector(".game__button");
 const gameTimer = document.querySelector(".game__timer");
 const gameScore = document.querySelector(".game__score");
 
-const popUp = document.querySelector(".pop-up");
-const popUpText = document.querySelector(".pop-up__message");
-const popUpRefreshBtn = document.querySelector(".pop-up__refresh");
-
 const carrotSound = new Audio("./sound/carrot_pull.mp3");
 const alertSound = new Audio("./sound/alert.wav");
 const bgSound = new Audio("./sound/bg.mp3");
@@ -25,6 +23,11 @@ let startFlag = false;
 let score = 0;
 let timer = undefined;
 
+const gameFinishBanner = new PopUp();
+gameFinishBanner.setClickListener(() => {
+  startGame(); // startGame 이라는 콜백함수 등록 -> 멤버변수에 onClick 할당
+});
+
 field.addEventListener("click", onFieldClick);
 gameBtn.addEventListener("click", () => {
   if (startFlag) {
@@ -32,10 +35,6 @@ gameBtn.addEventListener("click", () => {
   } else {
     startGame();
   }
-});
-popUpRefreshBtn.addEventListener("click", () => {
-  startGame();
-  hidePopUp();
 });
 
 // == start Game
@@ -53,7 +52,7 @@ function stopGame() {
   startFlag = false;
   stopGameTimer(); // game timer 종료
   hideGameButton();
-  showPopUpWithText("🥕 REPLAY? 🥕");
+  gameFinishBanner.showWithText("🥕 REPLAY? 🥕");
   playSound(alertSound);
   stopSound(bgSound);
 }
@@ -69,7 +68,7 @@ function finishGame(win) {
   }
   stopGameTimer(); // game timer 종료
   stopSound(bgSound);
-  showPopUpWithText(win ? "✨ YOU WON ✨" : "😝 YOU LOST 😝");
+  gameFinishBanner.showWithText(win ? "✨ YOU WON ✨" : "😝 YOU LOST 😝");
 }
 
 function showStopButton() {
@@ -110,15 +109,6 @@ function updateTimerText(time) {
   const minutes = Math.floor(time / 60); // minutes 소수점 내림 값
   const seconds = time % 60; // seconds / 60 의 나머지 값
   gameTimer.textContent = `${minutes}:${seconds}`;
-}
-
-function showPopUpWithText(text) {
-  popUpText.textContent = text;
-  popUp.classList.remove("pop-up__hide");
-}
-
-function hidePopUp() {
-  popUp.classList.add("pop-up__hide");
 }
 
 // == create Game
