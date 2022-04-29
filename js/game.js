@@ -1,8 +1,15 @@
 import Field from "./field.js";
 import * as sound from "./sound.js";
 
+export const Reason = Object.freeze({
+  // Object.freeze : 객체를 고정(freeze)
+  win: "win",
+  lose: "lose",
+  cancel: "cancel",
+});
+
 // Builder Pattern - obj 관리
-export default class GameBuilder {
+export class GameBuilder {
   withGameDuration(duration) {
     this.gameDuration = duration;
     return this;
@@ -75,7 +82,7 @@ class Game {
     this.hideGameButton();
     sound.playAlert();
     sound.stopBackground();
-    this.onGameStop && this.onGameStop("cancel");
+    this.onGameStop && this.onGameStop(Reason.cancel);
   }
 
   // == finish game
@@ -89,7 +96,7 @@ class Game {
     }
     this.stopGameTimer(); // game timer 종료
     sound.stopBackground();
-    this.onGameStop && this.onGameStop(win ? "win" : "lose");
+    this.onGameStop && this.onGameStop(win ? Reason.win : Reason.lose);
   }
 
   // === find the items
