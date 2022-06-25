@@ -41,16 +41,26 @@
 
 <br/>
 
-- win !
+#### 😎 win
+
   <img src="https://user-images.githubusercontent.com/81960250/175770594-1f4ed997-a87a-46ff-b546-abf74d46f35b.gif" />
 
-- lose
+<br/>
+
+#### 😫 lose
+
   <img src="https://user-images.githubusercontent.com/81960250/175770596-0b3c11c3-396c-4d9a-911a-511b511c2dd0.gif"/>
 
-- stop
+<br/>
+
+#### ❌ stop
+
   <img src="https://user-images.githubusercontent.com/81960250/175770600-372ff1e4-ce3b-46a3-b203-116941426e05.gif"/>
 
-- time over
+<br/>
+
+#### ⏰ time over
+
   <img src="https://user-images.githubusercontent.com/81960250/175770601-88f00ece-63a7-4691-9e62-a4636ce5dcce.gif"/>
 
 <br/>
