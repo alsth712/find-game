@@ -75,8 +75,6 @@
 
 <br/>
 
-이미지
-
 - vanilla JavaScript 를 이용한 당근 찾기 게임
 
 1. 게임 시작 버튼 클릭
